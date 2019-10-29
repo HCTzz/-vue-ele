@@ -16,6 +16,7 @@ clsIDCard.prototype.SetCardNo = function(CardNo) {
         if (CardNo.length > 18) {
             this.Valid = false;
         } else {
+            let pattern;
             if (CardNo.length == 18) {
                 pattern = /^\d{17}(\d|x|X)$/;
                 if (pattern.exec(CardNo) == null) { return; }
@@ -37,9 +38,9 @@ clsIDCard.prototype.IsValid = function() {
 clsIDCard.prototype.GetBirthDate = function() {
         var BirthDate = '';
         if (this.Valid) {
-BirthDate = this.GetBirthYear() + '-' + this.GetBirthMonth() + '-' +
-            this.GetBirthDay();
-}
+            BirthDate = this.GetBirthYear() + '-' + this.GetBirthMonth() + '-' +
+                this.GetBirthDay();
+        }
         return BirthDate;
     }
     // 返回生日中的年，格式如下，1981

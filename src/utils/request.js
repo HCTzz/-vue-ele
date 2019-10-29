@@ -33,7 +33,6 @@ service.interceptors.request.use(
     },
     error => {
         // do something with request error
-        console.log(error) // for debug
         return Promise.reject(error)
     }
 )
@@ -56,7 +55,7 @@ service.interceptors.response.use(
         // if the custom code is not 20000, it is judged as an error.
         if (res.code !== 20000) {
             Message({
-                message: res.message || 'Error',
+                message: res.message || '嘿嘿嘿，服务器打了个盹！',
                 type: 'error',
                 duration: 5 * 1000
             })
