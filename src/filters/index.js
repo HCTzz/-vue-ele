@@ -1,5 +1,5 @@
 // import parseTime, formatTime and set to filter
-export { parseTime, formatTime }
+import { parseTime, formatTime }
 from '@/utils'
 
 /**
@@ -69,13 +69,27 @@ export function uppercaseFirst(string) {
 }
 
 export function dateParse(time) {
-    parseTime(time, '{y}-{m}-{d}')
+    return parseTime(time, '{y}-{m}-{d}')
 }
 
 export function excludSec(time) {
-    parseTime(time, '{y}-{m}-{d} {h}:{i}')
+    return parseTime(time, '{y}-{m}-{d} {h}:{i}')
 }
 
 export function timeParse(time) {
-    parseTime(time)
+    return parseTime(time)
 }
+
+
+export function Dateformat(time) {
+    return formatTime(time,'{y}-{m}-{d}');
+}
+
+export function DateTimeformat(time) {
+    return formatTime(time)
+}
+
+export function Timeformat(time) {
+    return formatTime(time,'{h}:{i}:{s}')
+}
+

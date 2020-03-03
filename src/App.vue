@@ -9,3 +9,11 @@ export default {
   name: 'App'
 }
 </script>
+<style>
+  html{
+    font-size: 14px;
+  }
+  .el-button+.el-button{
+    margin-left: 0px;
+  }
+</style>

@@ -113,18 +113,29 @@ export const asyncRoutes = [{
             path: 'page',
             component: () =>
                 import('@/views/system/page'),
-            name: '资源管理'
-        }, {
-            path: 'role',
+            name: '权限管理'
+        },
+        {
+            path: 'file',
             component: () =>
-                import('@/views/system/role'),
-            name: '角色管理'
+                import('@/views/system/file'),
+            name: '文件管理'
+        },{
+            path: 'disk',
+            component: () =>
+                import('@/views/system/disk'),
+            name: '磁盘管理'
         }]
     },
     // 404 page must be placed at the end !!!
     { path: '*', redirect: '/404', hidden: true }
 ];
-
+// , {
+//     path: 'role',
+//     component: () =>
+//         import('@/views/system/role'),
+//     name: '角色管理'
+// }
 const createRouter = () =>
     new Router({
         // mode: 'history', // require service support
