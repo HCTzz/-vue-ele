@@ -25,7 +25,7 @@ const mutations = {
         state.avatar = avatar
     },
     SET_ROLES: (state, roles) => {
-        state.roles = roles
+        state.roles = roles;
     },
     SET_CYPTOKEY: (state, key) => {
         state.cyptoKey = key
@@ -40,10 +40,10 @@ const actions = {
             // login({ username: encrypt(username.trim()), password: encrypt(password) }).then(response => {
             login({ username: username.trim(), password: password }).then(response => {
                 const { data } = response
-                // commit('SET_TOKEN', data.data)
-                // setToken(data.data)
-                commit('SET_TOKEN', data.token)
-                setToken(data.token)
+                commit('SET_TOKEN', data)
+                setToken(data)
+                // commit('SET_TOKEN', data.token)
+                // setToken(data.token)
                 resolve()
             }).catch(error => {
                 reject(error)
@@ -56,22 +56,19 @@ const actions = {
         return new Promise((resolve, reject) => {
             getInfo(state.token).then(response => {
                 const { data } = response
-
                 if (!data) {
                     reject('Verification failed, please Login again.')
                 }
-
-                const { roles, name, avatar, introduction } = data
-
+                const { roles, username, avatar } = data
                 // roles must be a non-empty array
                 if (!roles || roles.length <= 0) {
                     reject('getInfo: roles must be a non-null array!')
                 }
-
-                commit('SET_ROLES', roles)
-                commit('SET_NAME', name)
+                var role = [];
+                role.push(roles);
+                commit('SET_ROLES', role)
+                commit('SET_NAME', username)
                 commit('SET_AVATAR', avatar)
-                commit('SET_INTRODUCTION', introduction)
                 resolve(data)
             }).catch(error => {
                 reject(error)

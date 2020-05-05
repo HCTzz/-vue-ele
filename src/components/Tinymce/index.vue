@@ -2,7 +2,7 @@
   <div :class="{fullscreen:fullscreen}" class="tinymce-container" :style="{width:containerWidth}">
     <textarea :id="tinymceId" class="tinymce-textarea" />
     <div class="editor-custom-btn-container">
-      <editorImage color="#1890ff" class="editor-upload-btn" @successCBK="imageSuccessCBK" />
+      <editorImage color="#1890ff" :accept="accept" class="editor-upload-btn" @successCBK="imageSuccessCBK" />
     </div>
   </div>
 </template>
@@ -54,6 +54,11 @@ export default {
       type: [Number, String],
       required: false,
       default: 'auto'
+    },
+    accept: {
+      type: String,
+      required: false,
+      default: '.jpg,.jpeg,.png,.gif,.bmp,.JPG,.JPEG,.PBG,.GIF,.BMP,.mp4,.rmvb,.flv,.MP4,.RMVB,.FLV'
     }
   },
   data() {
@@ -63,8 +68,8 @@ export default {
       tinymceId: this.id,
       fullscreen: false,
       languageTypeList: {
-        'en': 'en',
         'zh': 'zh_CN',
+        'en': 'en',
         'es': 'es_MX',
         'ja': 'ja'
       }
@@ -116,7 +121,7 @@ export default {
       const _this = this
       window.tinymce.init({
         selector: `#${this.tinymceId}`,
-        language: this.languageTypeList['en'],
+        language: this.languageTypeList['zh'],
         height: this.height,
         body_class: 'panel-body ',
         object_resizing: false,
@@ -125,13 +130,19 @@ export default {
         plugins: plugins,
         end_container_on_empty_block: true,
         powerpaste_word_import: 'clean',
-        code_dialog_height: 450,
-        code_dialog_width: 1000,
         advlist_bullet_styles: 'square',
         advlist_number_styles: 'default',
-        imagetools_cors_hosts: ['www.tinymce.com', 'codepen.io'],
         default_link_target: '_blank',
+        code_dialog_height: 450,
+        code_dialog_width: 1000,
         link_title: false,
+        file_picker_types: 'image',
+        automatic_uploads: true,
+        branding: false,
+        // images_upload_base_path:'/file/fileUpload',
+        images_reuse_filename: true,
+        paste_data_images: true,
+        images_upload_url: '/sysFile/fileUpload',
         nonbreaking_force_tab: true, // inserting nonbreaking space &nbsp; need Nonbreaking Space Plugin
         init_instance_callback: editor => {
           if (_this.value) {

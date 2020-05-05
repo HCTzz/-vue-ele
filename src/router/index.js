@@ -84,18 +84,18 @@ export const constantRoutes = [{
             icon: 'dashboard',
             affix: true
         }]
-    },
-    {
-        path: '/documentation',
-        component: Layout,
-        children: [{
-            path: 'index',
-            component: () =>
-                import('@/views/documentation/index'),
-            name: '开发文档',
-            icon: 'documentation'
-        }]
     }
+    // {
+    //     path: '/documentation',
+    //     component: Layout,
+    //     children: [{
+    //         path: 'index',
+    //         component: () =>
+    //             import('@/views/documentation/index'),
+    //         name: '开发文档',
+    //         icon: 'documentation'
+    //     }]
+    // }
 ];
 
 /**
@@ -107,20 +107,39 @@ export const asyncRoutes = [{
         component: Layout,
         redirect: '/system/page',
         alwaysShow: true, // will always show the root menu
-        name: '系统管理',
+        name: '内容管理',
         icon: 'lock',
         children: [{
-            path: 'page',
+            path: 'tinymce',
+            component: () => import('@/views/system/log'),
+            name: '文字'
+        },
+        // {
+        //     path: 'page',
+        //     component: () =>
+        //         import('@/views/system/page'),
+        //     name: '权限管理'
+        // },
+        // {
+        //     path: 'file',
+        //     component: () =>
+        //         import('@/views/system/file'),
+        //     name: '文件管理'
+        // },
+        {
+            path: 'img',
             component: () =>
-                import('@/views/system/page'),
-            name: '权限管理'
+                import('@/views/system/img'),
+            name: '相册管理'
         },
         {
-            path: 'file',
+            path: 'imgAdd',
+            hidden: true,
             component: () =>
-                import('@/views/system/file'),
-            name: '文件管理'
-        },{
+                import('@/views/system/img/add'),
+            name: '相册'
+        },
+        {
             path: 'disk',
             component: () =>
                 import('@/views/system/disk'),
@@ -130,12 +149,7 @@ export const asyncRoutes = [{
     // 404 page must be placed at the end !!!
     { path: '*', redirect: '/404', hidden: true }
 ];
-// , {
-//     path: 'role',
-//     component: () =>
-//         import('@/views/system/role'),
-//     name: '角色管理'
-// }
+
 const createRouter = () =>
     new Router({
         // mode: 'history', // require service support

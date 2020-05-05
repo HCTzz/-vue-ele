@@ -17,7 +17,7 @@
           class="input"
           size="mini"
           type="text"
-          placeholder="搜索磁盘文件"
+          placeholder="搜索相册"
           clearable
           @keyup.enter.native="searchFile"
         />
@@ -25,14 +25,13 @@
     </div>
     <div class="content" @contextmenu.prevent.stop="gapContextmenu($event)">
       <el-scrollbar>
-        <div v-for="(file,index) in fileList" :key="file.fileKey" :class="['file',file.fileKey === fileKey ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)" @click="focusDiv(index)" @dblclick.capture.once="enterFloder(file)">
-          <i :class="['el',file.fileIcon]" />
-          <span contenteditable="true" @blur="changeFileName(index,$event)">{{ file.fileName }}</span>
+        <div v-for="(file,index) in fileList" :key="file.id" :class="['file',file.id === id ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)" @click="focusDiv(index)" @dblclick.capture.once="enterFloder(file)">
+          <el-image :key="getImgSrc(file.fileId)" fit="cover" :src="getImgSrc(file.fileId)" lazy />
+          <span contenteditable="true" @blur="changeFileName(index,$event)">{{ file.name }}</span>
         </div>
       </el-scrollbar>
     </div>
     <div class="footer">
-      <div class="capacity"><span class="used">{{ capacityUsed }}</span>G/<span class="total">{{ capacityTotal }}</span>G</div>
       <div class="item"><span>{{ item }}</span>项</div>
     </div>
     <el-dialog
@@ -58,7 +57,7 @@
 <script>
 import { log } from 'util';
 import focusOnCondition from '@/directive/focus';
-import { getFileList, addFolder, getFile } from '@/api/file';
+import { getFileList, addPhoto, updatePhoto, deletePhoto } from '@/api/photo';
 import { MessageBox } from 'element-ui';
 document.oncontextmenu = function() { return false; }
 export default {
@@ -77,11 +76,11 @@ export default {
         fileList: [],
         file: null,
         tempFilelist: [],
-        capacityUsed: 0,
-        capacityTotal: 0,
         item: 0,
-        filePkey: '0',
-        fileKey: ''
+        rootId: '0',
+        pid: '',
+        id: '',
+        defaultImgPath: require('@/assets/img/default.jpg')
     };
   },
   watch: {
@@ -91,14 +90,15 @@ export default {
   },
   mounted: function() {
     const currentPath = this.currentPath;
-    const arrow = this.arrow;
-    getFile(this.filePkey).then((res) => {
-      currentPath.push('<a class="path-a" data-id="">' + res.data.fileName + '</a>');
-      currentPath.push(arrow);
-    });
-    this.freshFileList({ filePkey: '0', fileKey: '' });
+    this.freshFileList({ pid: this.rootId });
   },
   methods: {
+    getImgSrc(key) {
+      if (!key) {
+        return this.defaultImgPath;
+      }
+      return this.$store.state.serverPath + 'sysFile/priviewImg?fileKey=' + key;
+    },
     freshFileList(data) {
       const loading = this.$loading({
           lock: true,
@@ -109,7 +109,7 @@ export default {
       });
       this.fileList = [];
       getFileList(data).then((res) => {
-        const list = res.data;
+        const list = res.data.list;
         this.fileList = list;
       })
       loading.close();
@@ -128,13 +128,11 @@ export default {
     gapContextmenu(event) {
       this.$contextmenu({
         items: [
-          { label: '上传', icon: 'el-icon-upload2', divided: true },
-          { label: '新建文件夹', divided: true, onClick: () => {
-            const fileList = this.fileList;
-            const filePkey = this.filePkey;
-            let fileKey = this.fileKey;
+          // { label: "上传", icon: "el-icon-upload2",divided:true },
+          { label: '新建相册', divided: true, onClick: () => {
+            var that = this;
             MessageBox.prompt('', '编辑', {
-              inputValue: '新建文件夹',
+              inputValue: '新建相册',
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               beforeClose: function(action, instance, done) {
@@ -144,20 +142,20 @@ export default {
                 if (action === 'confirm') {
                   const value = instance.inputValue
                   if (value == '' || (value.length < 1 || value.length > 20)) {
-                    this.$message.error('输入格式不正确');
+                    that.$message.error('输入格式不正确');
                     return ;
                   }
                   const rtf = fileList.find((f) => {
                     return f.fileName === value;
                   })
                   if (rtf) {
-                    this.$message.error('已存在名为' + value + '的文件夹。');
+                    that.$message.error('已存在名为' + value + '的文件夹。');
                     return ;
                   }
-                  addFolder({ filePkey: filePkey, fileName: value }).then(function(res) {
-                    fileList.push(res.data);
-                    fileKey = res.data.fileKey;
+                  addPhoto({ pid: that.rootId, name: value }).then(function(res) {
+                    that.fileList.push(res.data);
                     done();
+                    that.$router.push({ path: '/system/imgAdd', params: { id: res.data.id }});
                   })
                   // focus = (this.fileList.length - 1);
                 }

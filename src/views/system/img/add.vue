@@ -1,64 +1,27 @@
 <template>
   <div class="main">
     <div class="header">
-      <div class="operate">
-        <span title="后退" :class="[!leftArrowEnable ? 'disabled' : '','el-icon-arrow-left']" @click="back" />
-        <span title="前进" :class="[!rightArrowEnable ? 'disabled' : '','el-icon-arrow-right']" @click="forward" />
-        <span title="刷新" class="el-icon-refresh" />
-      </div>
       <div class="separate" />
-      <div class="path">
-        <span v-html="currentPath.join(' ')" />
-      </div>
       <div class="separate" />
-      <div class="search">
-        <el-input
-          v-model="searchFileName"
-          class="input"
-          size="mini"
-          type="text"
-          placeholder="搜索磁盘文件"
-          clearable
-          @keyup.enter.native="searchFile"
-        />
-      </div>
     </div>
     <div class="content" @contextmenu.prevent.stop="gapContextmenu($event)">
       <el-scrollbar>
-        <div v-for="(file,index) in fileList" :key="file.fileKey" :class="['file',file.fileKey === fileKey ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)" @click="focusDiv(index)" @dblclick.capture.once="enterFloder(file)">
-          <i :class="['el',file.fileIcon]" />
+        <div v-for="(file,index) in fileList" :key="file.fileId" :class="['file',file.fileId === fileId ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)" @click="focusDiv(index)" @dblclick.capture.once="enterFloder(file)">
+          <img :src="getImgSrc(file.fileId)" :alt="file.name">
           <span contenteditable="true" @blur="changeFileName(index,$event)">{{ file.fileName }}</span>
         </div>
       </el-scrollbar>
     </div>
     <div class="footer">
-      <div class="capacity"><span class="used">{{ capacityUsed }}</span>G/<span class="total">{{ capacityTotal }}</span>G</div>
       <div class="item"><span>{{ item }}</span>项</div>
     </div>
-    <el-dialog
-      :visible.sync="visible"
-      width="400px"
-      custom-class="dialog"
-      title="属性"
-    >
-      <ul v-if="file != null">
-        <li>
-          <div><i :class="['el',file.icon]" /><span :title="file.fileName">{{ file.fileName }}</span></div>
-        </li>
-        <li><span>类型：</span><span>{{ file.fileTypeName }}</span></li>
-        <li><span>位置：</span><span :title="file.filePath">{{ file.filePath }}</span></li>
-        <li><span>大小：</span><span>{{ file.fileSize }}</span></li>
-        <li v-if="file.fileInfo != ''"><span>包含：</span><span>{{ file.fileInfo }}</span></li>
-        <li><span>修改时间：</span><span>{{ file.modifyDate }}</span></li>
-      </ul>
-    </el-dialog>
   </div>
 </template>
 
 <script>
 import { log } from 'util';
 import focusOnCondition from '@/directive/focus';
-import { getFileList, addFolder, getFile } from '@/api/file';
+import { getFileList } from '@/api/photo';
 import { MessageBox } from 'element-ui';
 document.oncontextmenu = function() { return false; }
 export default {
@@ -77,10 +40,9 @@ export default {
         fileList: [],
         file: null,
         tempFilelist: [],
-        capacityUsed: 0,
-        capacityTotal: 0,
         item: 0,
-        filePkey: '0',
+        rootKey: '0',
+        filePkey: '',
         fileKey: ''
     };
   },
@@ -91,14 +53,12 @@ export default {
   },
   mounted: function() {
     const currentPath = this.currentPath;
-    const arrow = this.arrow;
-    getFile(this.filePkey).then((res) => {
-      currentPath.push('<a class="path-a" data-id="">' + res.data.fileName + '</a>');
-      currentPath.push(arrow);
-    });
-    this.freshFileList({ filePkey: '0', fileKey: '' });
+    this.freshFileList({ filePkey: this.rootKey });
   },
   methods: {
+    getImgSrc(key) {
+      return this.$store.state.serverPath + 'sysFile/priviewImg?fileKey=' + key;
+    },
     freshFileList(data) {
       const loading = this.$loading({
           lock: true,
@@ -109,7 +69,7 @@ export default {
       });
       this.fileList = [];
       getFileList(data).then((res) => {
-        const list = res.data;
+        const list = res.data.list;
         this.fileList = list;
       })
       loading.close();
@@ -128,13 +88,13 @@ export default {
     gapContextmenu(event) {
       this.$contextmenu({
         items: [
-          { label: '上传', icon: 'el-icon-upload2', divided: true },
-          { label: '新建文件夹', divided: true, onClick: () => {
+          // { label: "上传", icon: "el-icon-upload2",divided:true },
+          { label: '新建相册', divided: true, onClick: () => {
             const fileList = this.fileList;
             const filePkey = this.filePkey;
             let fileKey = this.fileKey;
             MessageBox.prompt('', '编辑', {
-              inputValue: '新建文件夹',
+              inputValue: '新建相册',
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               beforeClose: function(action, instance, done) {
