@@ -32,5 +32,6 @@ module.exports = {
    * If you want to also use it in dev, you can pass ['production', 'development']
    */
   errorLog: 'production',
+  
   serverPath: 'http://localhost:8012/'
 }

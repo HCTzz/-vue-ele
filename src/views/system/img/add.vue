@@ -1,19 +1,26 @@
 <template>
   <div class="main">
     <div class="header">
-      <div class="separate" />
-      <div class="separate" />
+      <div>
+        <el-image class="img" :key="getImgSrc(photo.fileId)" fit="cover" :src="getImgSrc(photo.fileId)" lazy />
+      </div>
+      <div class="info">
+        <span>{{photo.name}} (<strong>{{photo.imgCount}}</strong>) </span>
+        <span>
+          <editorImage pickeName="上传图片" color="#1890ff" :accept="accept" class="editor-upload-btn" @successCBK="imageSuccessCBK" />
+        </span>
+      </div>
     </div>
-    <div class="content" @contextmenu.prevent.stop="gapContextmenu($event)">
+    <div class="content">
       <el-scrollbar>
-        <div v-for="(file,index) in fileList" :key="file.fileId" :class="['file',file.fileId === fileId ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)" @click="focusDiv(index)" @dblclick.capture.once="enterFloder(file)">
-          <img :src="getImgSrc(file.fileId)" :alt="file.name">
-          <span contenteditable="true" @blur="changeFileName(index,$event)">{{ file.fileName }}</span>
+        <div v-for="(file,index) in fileList" :key="file.fileId" :class="['file',file.fileId === fileId ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)">
+          <el-image style='height: 150px;cursor:pointer' :preview-src-list="priviewSrcList" :key="getImgSrc(file.fileId)" fit="cover" :src="getImgSrc(file.fileId)" lazy />
+          <div style="border-top: 1px solid #eee; height: 68px; background: #fff;">
+            <span contenteditable="true" @blur="changeFileName(index,$event)">{{ file.name }}</span>
+            <span >{{file.updateTime | excludSec}}</span>
+          </div>
         </div>
       </el-scrollbar>
-    </div>
-    <div class="footer">
-      <div class="item"><span>{{ item }}</span>项</div>
     </div>
   </div>
 </template>
@@ -21,43 +28,63 @@
 <script>
 import { log } from 'util';
 import focusOnCondition from '@/directive/focus';
-import { getFileList } from '@/api/photo';
+import { getFileList,batchAddPhoto } from '@/api/photo';
 import { MessageBox } from 'element-ui';
+import editorImage from '@/components/Tinymce/components/EditorImage'
 document.oncontextmenu = function() { return false; }
 export default {
   directives: { focusOnCondition },
+  components: { editorImage },
   data() {
     return {
         visible: false,
-        leftArrowEnable: false,
-        rightArrowEnable: false,
-        arrow: '<i class="el-icon-arrow-right"></i>',
-        currentPath: [],
-        currenLevel: 1,
-        pathIds: [''],
-        currentIndex: 0,
         searchFileName: '',
         fileList: [],
+        priviewSrcList:[],
         file: null,
         tempFilelist: [],
-        item: 0,
-        rootKey: '0',
-        filePkey: '',
-        fileKey: ''
+        pid:'',
+        photo:{},
+        fileId:'',
+        defaultImgPath: require('@/assets/img/default.jpg'),
+        accept: '.jpg,.jpeg,.png,.gif,.bmp,.JPG,.JPEG,.PBG,.GIF,.BMP'
     };
   },
   watch: {
     fileList: function(newFileList, oldFileList) {
-      this.item = newFileList.length;
+      if(!this.photo.fileId){
+        this.photo.fileId = newFileList[0].fileId;
+      }
+      this.photo.imgCount = newFileList.length;
+      var that = this;
+      newFileList.forEach(function(item, index) {
+          that.priviewSrcList.push(that.getImgSrc(item.fileId));
+      })
     }
   },
   mounted: function() {
-    const currentPath = this.currentPath;
-    this.freshFileList({ filePkey: this.rootKey });
+    this.pid = this.$route.params.pid;
+    this.freshFileList({ pid: this.pid,hasOwer:'y' });
   },
   methods: {
+    imageSuccessCBK(arr) {
+      arr.forEach(v => {
+        if(v.hasSuccess){
+          this.tempFilelist.push({fileId:v.uid,pid:this.pid,name:v.fileName});
+        }
+      });
+      batchAddPhoto(this.tempFilelist).then(res => {
+        this.$message.success('保存成功');
+        this.fileList = this.fileList.concat(res.data);
+        this.tempFilelist = [];
+      })
+    },
     getImgSrc(key) {
-      return this.$store.state.serverPath + 'sysFile/priviewImg?fileKey=' + key;
+      console.log(key);
+      if (!key) {
+        return this.defaultImgPath;
+      }
+      return this.$store.state.settings.serverPath + 'sysFile/priviewImg?fileKey=' + key;
     },
     freshFileList(data) {
       const loading = this.$loading({
@@ -71,6 +98,7 @@ export default {
       getFileList(data).then((res) => {
         const list = res.data.list;
         this.fileList = list;
+        this.photo = res.data.photo;
       })
       loading.close();
     },
@@ -85,66 +113,18 @@ export default {
       this.fileList.splice(index, 1);
       this.$message.success('删除成功！');
     },
-    gapContextmenu(event) {
-      this.$contextmenu({
-        items: [
-          // { label: "上传", icon: "el-icon-upload2",divided:true },
-          { label: '新建相册', divided: true, onClick: () => {
-            const fileList = this.fileList;
-            const filePkey = this.filePkey;
-            let fileKey = this.fileKey;
-            MessageBox.prompt('', '编辑', {
-              inputValue: '新建相册',
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              beforeClose: function(action, instance, done) {
-                if (action === 'cancel') {
-                  done();
-                }
-                if (action === 'confirm') {
-                  const value = instance.inputValue
-                  if (value == '' || (value.length < 1 || value.length > 20)) {
-                    this.$message.error('输入格式不正确');
-                    return ;
-                  }
-                  const rtf = fileList.find((f) => {
-                    return f.fileName === value;
-                  })
-                  if (rtf) {
-                    this.$message.error('已存在名为' + value + '的文件夹。');
-                    return ;
-                  }
-                  addFolder({ filePkey: filePkey, fileName: value }).then(function(res) {
-                    fileList.push(res.data);
-                    fileKey = res.data.fileKey;
-                    done();
-                  })
-                  // focus = (this.fileList.length - 1);
-                }
-              }
-            });
-          } },
-          { label: '刷新', icon: 'el-icon-refresh', divided: true, onClick: () => { this.freshFileList() } }
-        ],
-        event,
-        zIndex: 3,
-        minWidth: 100
-      });
-      return false;
-    },
     contextmenu(index, event) {
       this.$contextmenu({
         items: [
-          { label: '打开', icon: 'el-icon-back', divided: true },
+          { label: '查看', icon: 'el-icon-back', divided: true },
           { label: '下载', icon: 'el-icon-download', divided: true },
           { label: '移动到', divided: true },
           { label: '删除', divided: true, icon: 'el-icon-delete', onClick: () => {
             this.deleteFiles(index);
           } },
           { label: '重命名', divided: true, onClick: () => {
-            event.target.nextElementSibling.focus()
+            event.target.parentNode.nextElementSibling.focus();
           } },
-          { label: '属性', divided: true, onClick: () => { this.visible = !this.visible;this.file = this.fileList[index]; } }
         ],
         event,
         zIndex: 3,
@@ -155,19 +135,8 @@ export default {
 
     searchFile() {
       if (this.searchFileName == '' && this.tempFilelist.length > 0) {
-          this.fileList = this.tempFilelist;
-          this.this.tempFilelist = [];
-          return;
+        this.freshFileList({ pid: this.rootId,searchName:this.searchFileName });
       }
-      if (this.searchFileName == '') {
-        return;
-      }
-      this.leftArrowEnable = true;
-      const temp = this.fileList.filter(e => {
-        return e.fileName.indexOf(this.searchFileName) != -1;
-      })
-      this.tempFilelist = this.fileList;
-      this.fileList = temp;
     },
     back(e) {
       if (!this.leftArrowEnable) {
@@ -313,13 +282,30 @@ a.path-a:hover{
   }
   .header{
     font-size: 16px;
-    height: 45px;
-    line-height: 45px;
+    height: 90px;
     width: 100%;
     border-bottom: 1px solid #ccc;
     > div{
       display: inline-block;
       vertical-align: middle;
+      height: 100%;
+      span{
+        display: block;
+        height: 45px;
+      }
+      span:nth-child(1){
+        color: #999;
+        line-height: 50px;
+      }
+      span:nth-child(2){
+        line-height: 40px;
+        color: #aaa;
+      }
+    };
+    .img{
+      width: 60px !important;
+      height: 65px;
+      margin: 15px 15px 0px 15px;
     };
     .operate{
       margin-left:8px;
@@ -331,7 +317,8 @@ a.path-a:hover{
       };
       span.disabled{
         color: #bbb
-      }
+      };
+      
     };
     .path{
       width: 70%;
@@ -361,22 +348,24 @@ a.path-a:hover{
     };
   };
   .content{
-    height: calc(100vh - 160px);
+    height: calc(100vh - 135px);
     overflow: hidden;
+    background: #e8f4ff;
     div.file:hover{
-        background: rgba(218, 245, 255,0.36);
+        // background: rgba(218, 245, 255,0.36);
     };
     div.focus{
-        background:#DAF5FF !important;
-        border: 1px solid #74bcff;
+        // background:#DAF5FF !important;
+        // border: 1px solid #74bcff;
     };
     div.file{
       position: relative;
       text-align: center;
-      width: 140px;
+      width: 190px;
       display: inline-block;
       padding: 10px;
       margin: 10px 20px;
+      vertical-align: top;
       > * {
         box-sizing: border-box;
         display: block;
@@ -390,8 +379,20 @@ a.path-a:hover{
         overflow: hidden;
         text-overflow: ellipsis;
         width: 100%;
-        padding: 15px 0px 0px 0px;
+        text-align: left;
         font-size: 12px;
+        display: block;
+        padding-left: 2px;
+      };
+      span:nth-child(1){
+        height: 40px;
+        line-height: 40px;
+        color:#333;
+      };
+      span:nth-child(2){
+        height: 20px;
+        line-height: 20px;
+        color: #aaa;
       }
     }
   }

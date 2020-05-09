@@ -13,6 +13,9 @@ export default {
   html{
     font-size: 14px;
   }
+  #app{
+    overflow: hidden;
+  }
   .el-button+.el-button{
     margin-left: 0px;
   }

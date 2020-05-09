@@ -133,7 +133,7 @@ export const asyncRoutes = [{
             name: '相册管理'
         },
         {
-            path: 'imgAdd',
+            path: 'imgAdd/:pid',
             hidden: true,
             component: () =>
                 import('@/views/system/img/add'),

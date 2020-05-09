@@ -1,7 +1,7 @@
 <template>
   <div class="main">
     <div class="header">
-      <div class="operate">
+      <!-- <div class="operate">
         <span title="后退" :class="[!leftArrowEnable ? 'disabled' : '','el-icon-arrow-left']" @click="back" />
         <span title="前进" :class="[!rightArrowEnable ? 'disabled' : '','el-icon-arrow-right']" @click="forward" />
         <span title="刷新" class="el-icon-refresh" />
@@ -9,8 +9,8 @@
       <div class="separate" />
       <div class="path">
         <span v-html="currentPath.join(' ')" />
-      </div>
-      <div class="separate" />
+      </div> -->
+      <!-- <div class="separate" /> -->
       <div class="search">
         <el-input
           v-model="searchFileName"
@@ -26,13 +26,13 @@
     <div class="content" @contextmenu.prevent.stop="gapContextmenu($event)">
       <el-scrollbar>
         <div v-for="(file,index) in fileList" :key="file.id" :class="['file',file.id === id ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)" @click="focusDiv(index)" @dblclick.capture.once="enterFloder(file)">
-          <el-image :key="getImgSrc(file.fileId)" fit="cover" :src="getImgSrc(file.fileId)" lazy />
-          <span contenteditable="true" @blur="changeFileName(index,$event)">{{ file.name }}</span>
+          <div style="width:150px;height:150px">
+            <el-image  class="img" :key="getImgSrc(file.fileId)" fit="fill" :src="getImgSrc(file.fileId)" lazy />
+          </div>
+          <span contenteditable="true" @blur="changeFileName(file,index,$event)">{{ file.name }}</span>
+          <div class="item"><span>{{ file.imgCount }}</span></div>
         </div>
       </el-scrollbar>
-    </div>
-    <div class="footer">
-      <div class="item"><span>{{ item }}</span>项</div>
     </div>
     <el-dialog
       :visible.sync="visible"
@@ -76,16 +76,13 @@ export default {
         fileList: [],
         file: null,
         tempFilelist: [],
-        item: 0,
         rootId: '0',
-        pid: '',
         id: '',
         defaultImgPath: require('@/assets/img/default.jpg')
     };
   },
   watch: {
     fileList: function(newFileList, oldFileList) {
-      this.item = newFileList.length;
     }
   },
   mounted: function() {
@@ -97,7 +94,7 @@ export default {
       if (!key) {
         return this.defaultImgPath;
       }
-      return this.$store.state.serverPath + 'sysFile/priviewImg?fileKey=' + key;
+      return this.$store.state.settings.serverPath + '/sysFile/priviewImg?fileKey=' + key;
     },
     freshFileList(data) {
       const loading = this.$loading({
@@ -114,12 +111,15 @@ export default {
       })
       loading.close();
     },
-    changeFileName(index, event) {
+    changeFileName(file,index, event) {
       const changeName = event.target.innerText;
-      if (this.fileList[index].fileName !== changeName) {
-        this.fileList[index].fileName = changeName;
-      }
-      this.focus = -1;
+      file.name = changeName;
+      updatePhoto(file).then(res => {
+        this.$message.success('修改成功');
+        if (this.fileList[index].fileName !== changeName) {
+          this.fileList[index].fileName = changeName;
+        }
+      });
     },
     deleteFiles(index) {
       this.fileList.splice(index, 1);
@@ -145,7 +145,7 @@ export default {
                     that.$message.error('输入格式不正确');
                     return ;
                   }
-                  const rtf = fileList.find((f) => {
+                  const rtf = that.fileList.find((f) => {
                     return f.fileName === value;
                   })
                   if (rtf) {
@@ -155,14 +155,14 @@ export default {
                   addPhoto({ pid: that.rootId, name: value }).then(function(res) {
                     that.fileList.push(res.data);
                     done();
-                    that.$router.push({ path: '/system/imgAdd', params: { id: res.data.id }});
+                    that.$router.push({ path: `/system/imgAdd/${res.data.id}`});
                   })
                   // focus = (this.fileList.length - 1);
                 }
               }
             });
           } },
-          { label: '刷新', icon: 'el-icon-refresh', divided: true, onClick: () => { this.freshFileList() } }
+          { label: '刷新', icon: 'el-icon-refresh', divided: true, onClick: () => { this.freshFileList({ pid: this.rootId }) } }
         ],
         event,
         zIndex: 3,
@@ -180,7 +180,7 @@ export default {
             this.deleteFiles(index);
           } },
           { label: '重命名', divided: true, onClick: () => {
-            event.target.nextElementSibling.focus()
+            event.target.parentNode.nextElementSibling.focus()
           } },
           { label: '属性', divided: true, onClick: () => { this.visible = !this.visible;this.file = this.fileList[index]; } }
         ],
@@ -192,20 +192,25 @@ export default {
     },
 
     searchFile() {
-      if (this.searchFileName == '' && this.tempFilelist.length > 0) {
-          this.fileList = this.tempFilelist;
-          this.this.tempFilelist = [];
-          return;
+      if (this.searchFileName) {
+        this.freshFileList({ pid: this.rootId,searchName:this.searchFileName });
+      }else{
+        this.freshFileList({ pid: this.rootId});
       }
-      if (this.searchFileName == '') {
-        return;
-      }
-      this.leftArrowEnable = true;
-      const temp = this.fileList.filter(e => {
-        return e.fileName.indexOf(this.searchFileName) != -1;
-      })
-      this.tempFilelist = this.fileList;
-      this.fileList = temp;
+      // if (this.searchFileName == '' && this.tempFilelist.length > 0) {
+      //     this.fileList = this.tempFilelist;
+      //     this.this.tempFilelist = [];
+      //     return;
+      // }
+      // if (this.searchFileName == '') {
+      //   return;
+      // }
+      // this.leftArrowEnable = true;
+      // const temp = this.fileList.filter(e => {
+      //   return e.fileName.indexOf(this.searchFileName) != -1;
+      // })
+      // this.tempFilelist = this.fileList;
+      // this.fileList = temp;
     },
     back(e) {
       if (!this.leftArrowEnable) {
@@ -238,14 +243,15 @@ export default {
       }
     },
     enterFloder(file) {
-      if (file.ended) {
-        return false;
-      }
-      this.leftArrowEnable = true;
-      this.pathIds.push(file.fileKey);
-      this.currentIndex++;
-      this.currentPath.push('<a class="path-a" data-id="' + file.fileKey + '">' + file.fileName + '</a>');
-      this.currentPath.push(this.arrow);
+      this.$router.push({path:`/system/imgAdd/${file.id}`})
+      // if (file.ended) {
+      //   return false;
+      // }
+      // this.leftArrowEnable = true;
+      // this.pathIds.push(file.fileKey);
+      // this.currentIndex++;
+      // this.currentPath.push('<a class="path-a" data-id="' + file.id + '">' + file.name + '</a>');
+      // this.currentPath.push(this.arrow);
     },
     focusDiv(index) {
       this.number = index;
@@ -254,6 +260,9 @@ export default {
 };
 </script>
 <style lang="scss">
+.search{
+  margin-left: 20px;
+}
 .search .el-input__inner{
     padding-left: 0px ;
     padding-right: 10px ;
@@ -399,11 +408,9 @@ a.path-a:hover{
     };
   };
   .content{
-    height: calc(100vh - 160px);
+    height: calc(100vh - 135px);
     overflow: hidden;
-    div.file:hover{
-        background: rgba(218, 245, 255,0.36);
-    };
+    
     div.focus{
         background:#DAF5FF !important;
         border: 1px solid #74bcff;
@@ -411,14 +418,28 @@ a.path-a:hover{
     div.file{
       position: relative;
       text-align: center;
-      width: 140px;
+      width: 180px;
       display: inline-block;
-      padding: 10px;
+      padding: 15px;
       margin: 10px 20px;
+      background: #f2f6fc;
+      cursor: pointer;
+      height: 218px;
+      vertical-align: top;
       > * {
         box-sizing: border-box;
         display: block;
       };
+      .item{
+        position: absolute;
+        right: 25px;
+        bottom: 60px;
+        color: #fff;
+        font-size: 16px;
+        span{
+          font-size: 18px;
+        }
+      }
       i{
         margin: 0 auto;
         font-size: 80px;
@@ -428,8 +449,9 @@ a.path-a:hover{
         overflow: hidden;
         text-overflow: ellipsis;
         width: 100%;
-        padding: 15px 0px 0px 0px;
         font-size: 12px;
+        margin-top: 15px;
+        padding: 5px;
       }
     }
   }

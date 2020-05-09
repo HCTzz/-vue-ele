@@ -1,13 +1,11 @@
 'use strict'
 const path = require('path')
 const defaultSettings = require('./src/settings.js')
-
 function resolve(dir) {
     return path.join(__dirname, dir)
 }
 
 const name = defaultSettings.title || 'vue Element Admin' // page title
-
 // If your port is set to 80,
 // use administrator privileges to execute the command line.
 // For example, Mac: sudo npm run
@@ -40,15 +38,15 @@ module.exports = {
             // change xxx-api/login => mock/login
             // detail: https://cli.vuejs.org/config/#devserver-proxy
             [process.env.VUE_APP_BASE_API]: {
-                // target: `http://127.0.0.1:8090/mock`,
-                target: `http://127.0.0.1:${port}/mock`,
+                target: `http://127.0.0.1:8012/`,
+                //target: `http://127.0.0.1:${port}/mock`,
                 changeOrigin: true,
                 pathRewrite: {
                     ['^' + process.env.VUE_APP_BASE_API]: ''
                 }
             }
         },
-        after: require('./mock/mock-server.js')
+        // after: require('./mock/mock-server.js')
     },
     configureWebpack: {
         // provide the app's title in webpack's name field, so that
@@ -63,7 +61,6 @@ module.exports = {
     chainWebpack(config) {
         config.plugins.delete('preload') // TODO: need test
         config.plugins.delete('prefetch') // TODO: need test
-
         // set svg-sprite-loader
         config.module
             .rule('svg')
@@ -97,7 +94,10 @@ module.exports = {
             .when(process.env.NODE_ENV === 'development',
             config => config.devtool('cheap-source-map')
         )
-
+        config
+            .plugin('webpack-bundle-analyzer')
+            .use(require('webpack-bundle-analyzer').BundleAnalyzerPlugin)
+                    
         config
             .when(process.env.NODE_ENV !== 'development',
                 config => {

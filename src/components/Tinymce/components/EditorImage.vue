@@ -2,7 +2,7 @@
   <!-- :headers="header" -->
   <div class="upload-container">
     <el-button :style="{background:color,borderColor:color}" icon="el-icon-upload" size="mini" type="primary" @click=" dialogVisible=true">
-      upload
+      {{pickeName}}
     </el-button>
     <el-dialog z-index="2000" :visible.sync="dialogVisible">
       <el-upload
@@ -47,6 +47,11 @@ export default {
     accept: {
       type: String,
       default: '.jpg,.jpeg,.png,.gif,.bmp,.pdf,.JPG,.JPEG,.PBG,.GIF,.BMP,.mp4,.rmvb,.flv'
+    },
+    pickeName:{
+      type:String,
+      required:false,
+      default:'上传'
     }
   },
   data() {
@@ -90,9 +95,10 @@ export default {
       const objKeyArr = Object.keys(this.listObj)
       for (let i = 0, len = objKeyArr.length; i < len; i++) {
         if (this.listObj[objKeyArr[i]].uid === uid) {
-          this.listObj[objKeyArr[i]].url = data.filePath
-          this.listObj[objKeyArr[i]].hasSuccess = true
-          this.listObj[objKeyArr[i]].uid = data.fileKey
+          this.listObj[objKeyArr[i]].url = data.filePath;
+          this.listObj[objKeyArr[i]].hasSuccess = true;
+          this.listObj[objKeyArr[i]].uid = data.fileKey;
+          this.listObj[objKeyArr[i]].fileName = data.fileName;
           return
         }
       }

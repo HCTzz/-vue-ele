@@ -17,6 +17,17 @@ export function addPhoto(data) {
   })
 }
 
+export function batchAddPhoto(data) {
+  return request({
+    url: '/photo/batchAddPhoto',
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data:JSON.stringify(data)
+  })
+}
+
 export function updatePhoto(data) {
   return request({
     url: '/photo/updatePhoto',
