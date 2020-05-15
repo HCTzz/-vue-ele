@@ -29,6 +29,7 @@
         :fit="true"
         style="width: 100%"
         empty-text="无数据"
+        class="ele-table"
       >
         <el-table-column type="index" label="序号" width="50" align="center" />
         <el-table-column prop="title" label="标题" min-width="55%" show-overflow-tooltip align="center" />
@@ -88,6 +89,7 @@
         :total="total"
         :page.sync="listQuery.page"
         :limit.sync="listQuery.limit"
+        @pagination="changePage"
       />
     </div>
     <el-dialog
@@ -112,7 +114,7 @@
           <el-input v-model="vlog.title" />
         </el-form-item>
         <el-form-item label="内容" prop="content">
-          <tinymce :value="vlog.content" accept=".jpg,.jpeg,.png,.gif,.bmp,.JPG,.JPEG,.PBG,.GIF,.BMP" :height="200" @input="setContent" />
+          <tinymce ref = "tinymce" :value="vlog.content" accept=".jpg,.jpeg,.png,.gif,.bmp,.JPG,.JPEG,.PBG,.GIF,.BMP" :height="200" @input="setContent" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="saveVlog">保存</el-button>
@@ -188,12 +190,19 @@ export default {
     };
   },
   mounted: function() {
-    fetchList(this.listQuery).then(res => {
-      this.total = res.data.total;
-      this.tableData = res.data.list;
-    })
+    this.initList();
   },
   methods: {
+    initList(){
+      fetchList(this.listQuery).then(res => {
+        this.total = res.data.total;
+        this.tableData = res.data.list;
+      })
+    },
+    changePage(data){
+      this.listQuery = data; 
+      this.initList();
+    },
     updateStatus(vlog, status, index) {
       this.vlog.id = vlog.id;
       this.vlog.deleteStatus = status;
@@ -229,7 +238,7 @@ export default {
       } else if (type === 'add' && row) {
         this.vlog = Object.assign({}, defaultVlog, { id: row.id });
       } else {
-        this.vlog = Object.assign({}, defaultVlog, { component: 'layout' });
+        this.vlog = Object.assign({}, defaultVlog, {});
       }
     },
     deleteRow(row, index) {
@@ -246,6 +255,8 @@ export default {
             createArticle(this.vlog).then(res => {
                 this.tableData.push(res.data);
                 this.$message.success('保存成功！');
+                this.closeDialog();
+                this.$refs['tinymce'].$emit('clearContent');
             })
             return false;
           } else {
@@ -272,7 +283,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style  scoped>
 .main {
   padding: 20px 10px 0px 10px;
 }
@@ -281,5 +292,8 @@ export default {
 }
 .btns .el-button{
   margin-left: 20px;
+}
+.table{
+  height: calc(100% - 100px);
 }
 </style>

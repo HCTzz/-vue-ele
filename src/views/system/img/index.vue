@@ -1,16 +1,6 @@
 <template>
   <div class="main">
     <div class="header">
-      <!-- <div class="operate">
-        <span title="后退" :class="[!leftArrowEnable ? 'disabled' : '','el-icon-arrow-left']" @click="back" />
-        <span title="前进" :class="[!rightArrowEnable ? 'disabled' : '','el-icon-arrow-right']" @click="forward" />
-        <span title="刷新" class="el-icon-refresh" />
-      </div>
-      <div class="separate" />
-      <div class="path">
-        <span v-html="currentPath.join(' ')" />
-      </div> -->
-      <!-- <div class="separate" /> -->
       <div class="search">
         <el-input
           v-model="searchFileName"
@@ -24,13 +14,14 @@
       </div>
     </div>
     <div class="content" @contextmenu.prevent.stop="gapContextmenu($event)">
-      <el-scrollbar>
-        <div v-for="(file,index) in fileList" :key="file.id" :class="['file',file.id === id ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)" @click="focusDiv(index)" @dblclick.capture.once="enterFloder(file)">
-          <div style="width:150px;height:150px">
-            <el-image  class="img" :key="getImgSrc(file.fileId)" fit="fill" :src="getImgSrc(file.fileId)" lazy />
+      <el-scrollbar style="height:100%">
+        <div v-for="(file,index) in fileList" :key="file.id" :class="['file',file.id === id ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(file.id,index,$event)" @click="focusDiv(index)" @dblclick.capture.once="enterFloder(file)">
+          <!-- <el-image style="width:150px;height:150px" :key="getImgSrc(file.fileId)" class="img"  fit="cover" v-lazy="getImgSrc(file.fileId)" /> -->
+          <div style="width:150px;height:150px;">
+            <img :key="getImgSrc(file.fileId)" style="background-size: cover;max-width:100%" class="img"  fit="cover" v-lazy="getImgSrc(file.fileId)">
           </div>
           <span contenteditable="true" @blur="changeFileName(file,index,$event)">{{ file.name }}</span>
-          <div class="item"><span>{{ file.imgCount }}</span></div>
+          <div class="item"><span>{{ file.imgCount }}P</span></div>
         </div>
       </el-scrollbar>
     </div>
@@ -91,6 +82,7 @@ export default {
   },
   methods: {
     getImgSrc(key) {
+      console.log('key : ' + key);
       if (!key) {
         return this.defaultImgPath;
       }
@@ -113,6 +105,9 @@ export default {
     },
     changeFileName(file,index, event) {
       const changeName = event.target.innerText;
+      if(file.name == changeName){
+        return ;
+      }
       file.name = changeName;
       updatePhoto(file).then(res => {
         this.$message.success('修改成功');
@@ -121,9 +116,18 @@ export default {
         }
       });
     },
-    deleteFiles(index) {
-      this.fileList.splice(index, 1);
-      this.$message.success('删除成功！');
+    deleteFiles(id,index) {
+      this.$confirm('此操作将永久删除该相册, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          center: true
+        }).then(() => {
+           deletePhoto({id,id}).then(res => {
+            this.fileList.splice(index, 1);
+            this.$message.success('删除成功！');
+        })
+      })
     },
     gapContextmenu(event) {
       this.$contextmenu({
@@ -170,19 +174,16 @@ export default {
       });
       return false;
     },
-    contextmenu(index, event) {
+    contextmenu(id,index, event) {
       this.$contextmenu({
         items: [
           { label: '打开', icon: 'el-icon-back', divided: true },
-          { label: '下载', icon: 'el-icon-download', divided: true },
-          { label: '移动到', divided: true },
           { label: '删除', divided: true, icon: 'el-icon-delete', onClick: () => {
-            this.deleteFiles(index);
+            this.deleteFiles(id,index);
           } },
           { label: '重命名', divided: true, onClick: () => {
             event.target.parentNode.nextElementSibling.focus()
           } },
-          { label: '属性', divided: true, onClick: () => { this.visible = !this.visible;this.file = this.fileList[index]; } }
         ],
         event,
         zIndex: 3,
@@ -409,8 +410,7 @@ a.path-a:hover{
   };
   .content{
     height: calc(100vh - 135px);
-    overflow: hidden;
-    
+    // overflow: auto;
     div.focus{
         background:#DAF5FF !important;
         border: 1px solid #74bcff;
@@ -434,7 +434,7 @@ a.path-a:hover{
         position: absolute;
         right: 25px;
         bottom: 60px;
-        color: #fff;
+        color: #e6a700;
         font-size: 16px;
         span{
           font-size: 18px;
@@ -456,4 +456,6 @@ a.path-a:hover{
     }
   }
 }
+
+
 </style>

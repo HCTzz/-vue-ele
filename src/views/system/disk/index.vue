@@ -430,8 +430,12 @@ a.path-a:hover{
         overflow: hidden;
         text-overflow: ellipsis;
         width: 100%;
-        padding: 15px 0px 0px 0px;
         font-size: 12px;
+        display: block;
+        font-size: 12px;
+        height: 30px;
+        line-height: 30px;
+        margin-top: 5px;
       }
     }
   }

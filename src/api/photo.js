@@ -38,9 +38,11 @@ export function updatePhoto(data) {
 
 export function deletePhoto(data) {
   return request({
-    url: '/photo/addPhoto',
+    url: '/photo/deletePhoto',
     method: 'post',
     data
   })
 }
+
+
 

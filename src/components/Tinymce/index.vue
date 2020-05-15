@@ -75,6 +75,11 @@ export default {
       }
     }
   },
+  created(){
+    this.$on('clearContent', function(){
+      this.setContent('');
+    });
+  },
   computed: {
     containerWidth() {
       const width = this.width
@@ -114,7 +119,7 @@ export default {
           this.$message.error(err.message)
           return
         }
-        this.initTinymce()
+        this.initTinymce();
       })
     },
     initTinymce() {

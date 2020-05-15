@@ -4,6 +4,9 @@ import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
+import VueLazyload from 'vue-lazyload'
+
+
 import Element from 'element-ui'
 import './styles/element-variables.scss'
 
@@ -32,6 +35,9 @@ Vue.use(Contextmenu);
 // if (process.env.NODE_ENV === 'production') {
 //     mockXHR()
 // }
+Vue.use(VueLazyload,{
+    error: require('@/assets/img/error.png'),
+})
 
 Vue.use(Element, {
     size: Cookies.get('size') || 'medium' // set element-ui default size

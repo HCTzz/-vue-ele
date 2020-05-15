@@ -166,9 +166,18 @@ export default {
           this.loading = true;
           this.$store.dispatch('user/login', { username: encrypt(this.loginForm.username), password: encrypt(this.loginForm.password) })
             .then(() => {
-              this.$message.success('登陆成功');
-              this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
-              this.loading = false
+              this.$message({
+                showClose: true,
+                message: '登陆成功',
+                type: 'success',
+                duration:2000,
+                onClose:() => {
+                   this.loading = false 
+                   this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+                }
+              });
+              // this.$message.success('登陆成功');
+             
             })
             .catch(() => {
               this.loading = false

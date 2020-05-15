@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import {serverPath} from '@/settings'
 import qs from 'qs'
 
 export function getFileList(data) {
@@ -32,4 +33,14 @@ export function deleteFile(fileKey) {
     method: 'delete',
     params: { fileKey }
   })
+}
+
+export function downloadFile(fileKey) {
+  window.location.href = serverPath + '/sysFile/downloadFile?fileKey='+fileKey;
+  // return request({
+  //   url: '/sysFile/downloadFile',
+  //   method: 'post',
+  //   responseType: 'blob',
+  //   params: { fileKey }
+  // })
 }

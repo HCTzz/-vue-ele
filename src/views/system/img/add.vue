@@ -12,11 +12,11 @@
       </div>
     </div>
     <div class="content">
-      <el-scrollbar>
-        <div v-for="(file,index) in fileList" :key="file.fileId" :class="['file',file.fileId === fileId ? 'focus':'']" @contextmenu.prevent.stop="contextmenu(index,$event)">
-          <el-image style='height: 150px;cursor:pointer' :preview-src-list="priviewSrcList" :key="getImgSrc(file.fileId)" fit="cover" :src="getImgSrc(file.fileId)" lazy />
+      <el-scrollbar style='height:100%'>
+        <div v-for="(file,index) in fileList" :key="file.fileId" :class="['file',file.fileId === fileId ? 'focus':'']" >
+          <el-image style='height: 150px;cursor:pointer' @contextmenu.prevent.stop="contextmenu(file.id,index,$event)" :preview-src-list="priviewSrcList" :key="getImgSrc(file.fileId)" fit="cover" :src="getImgSrc(file.fileId)" lazy />
           <div style="border-top: 1px solid #eee; height: 68px; background: #fff;">
-            <span contenteditable="true" @blur="changeFileName(index,$event)">{{ file.name }}</span>
+            <span contenteditable="true" @blur="changeFileName(file,index,$event)">{{ file.name }}</span>
             <span >{{file.updateTime | excludSec}}</span>
           </div>
         </div>
@@ -28,7 +28,8 @@
 <script>
 import { log } from 'util';
 import focusOnCondition from '@/directive/focus';
-import { getFileList,batchAddPhoto } from '@/api/photo';
+import { getFileList, batchAddPhoto, deletePhoto, updatePhoto} from '@/api/photo';
+import { downloadFile} from '@/api/file';
 import { MessageBox } from 'element-ui';
 import editorImage from '@/components/Tinymce/components/EditorImage'
 document.oncontextmenu = function() { return false; }
@@ -52,8 +53,11 @@ export default {
   },
   watch: {
     fileList: function(newFileList, oldFileList) {
-      if(!this.photo.fileId){
-        this.photo.fileId = newFileList[0].fileId;
+      if(this.photo &&  !this.photo.fileId){
+        if(this.photo.hasOwnProperty('fileId')){
+          this.photo.fileId = newFileList[0].fileId;
+        }
+        
       }
       this.photo.imgCount = newFileList.length;
       var that = this;
@@ -80,7 +84,6 @@ export default {
       })
     },
     getImgSrc(key) {
-      console.log(key);
       if (!key) {
         return this.defaultImgPath;
       }
@@ -102,28 +105,50 @@ export default {
       })
       loading.close();
     },
-    changeFileName(index, event) {
+    changeFileName(file,index, event) {
       const changeName = event.target.innerText;
-      if (this.fileList[index].fileName !== changeName) {
-        this.fileList[index].fileName = changeName;
+      if(file.name == changeName){
+        return ;
       }
-      this.focus = -1;
+      file.name = changeName;
+      updatePhoto(file).then(res => {
+        this.$message.success('修改成功');
+        if (this.fileList[index].fileName !== changeName) {
+          this.fileList[index].fileName = changeName;
+        }
+      });
     },
-    deleteFiles(index) {
-      this.fileList.splice(index, 1);
-      this.$message.success('删除成功！');
+    deleteFiles(id,index) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          center: true
+        }).then(() => {
+           deletePhoto({id,id}).then(res => {
+            this.fileList.splice(index, 1);
+            this.$message.success('删除成功！');
+          })
+        })
     },
-    contextmenu(index, event) {
+    downLoad(id,index){
+        downloadFile( this.fileList[index].fileId);
+    },
+    contextmenu(id,index, event) {
       this.$contextmenu({
         items: [
-          { label: '查看', icon: 'el-icon-back', divided: true },
-          { label: '下载', icon: 'el-icon-download', divided: true },
-          { label: '移动到', divided: true },
+          { label: '查看', icon: 'el-icon-back', divided: true, onClick: () => {
+            event.target.click();
+          } },
+          { label: '下载', icon: 'el-icon-download', divided: true , onClick: () => {
+            this.downLoad(id,index);
+          } },
+          // { label: '移动到', divided: true },
           { label: '删除', divided: true, icon: 'el-icon-delete', onClick: () => {
-            this.deleteFiles(index);
+            this.deleteFiles(id,index);
           } },
           { label: '重命名', divided: true, onClick: () => {
-            event.target.parentNode.nextElementSibling.focus();
+            event.target.parentNode.nextElementSibling.children[0].focus();
           } },
         ],
         event,
@@ -348,7 +373,7 @@ a.path-a:hover{
     };
   };
   .content{
-    height: calc(100vh - 135px);
+    height: calc(100vh - 175px);
     overflow: hidden;
     background: #e8f4ff;
     div.file:hover{
@@ -362,9 +387,10 @@ a.path-a:hover{
       position: relative;
       text-align: center;
       width: 190px;
+      width: 15%;
       display: inline-block;
       padding: 10px;
-      margin: 10px 20px;
+      margin: 10px;
       vertical-align: top;
       > * {
         box-sizing: border-box;
@@ -397,4 +423,11 @@ a.path-a:hover{
     }
   }
 }
+
+@media screen and (max-width: 300px) {
+    body {
+        background-color:lightblue;
+    }
+}
+
 </style>
