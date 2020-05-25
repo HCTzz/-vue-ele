@@ -22,7 +22,7 @@ module.exports = {
      * In most cases please use '/' !!!
      * Detail: https://cli.vuejs.org/config/#publicpath
      */
-    publicPath: '/',
+    publicPath: '/manage',
     outputDir: 'dist',
     assetsDir: 'static',
     lintOnSave: false, //process.env.NODE_ENV === 'development',
@@ -42,7 +42,7 @@ module.exports = {
                 //target: `http://127.0.0.1:${port}/mock`,
                 changeOrigin: true,
                 pathRewrite: {
-                    ['^' + process.env.VUE_APP_BASE_API]: ''
+                    ['^' + process.env.VUE_APP_BASE_API]: '/pro'
                 }
             }
         },
@@ -54,7 +54,7 @@ module.exports = {
         name: name,
         resolve: {
             alias: {
-                '@': resolve('src')
+                '@': resolve('src'),
             }
         }
     },

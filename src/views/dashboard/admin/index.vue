@@ -2,7 +2,6 @@
   <div style="height:100%">
     <el-scrollbar wrap-class="scrollbar-wrapper">
       <div class="dashboard-editor-container">
-        <github-corner class="github-corner" />
 
         <panel-group @handleSetLineChartData="handleSetLineChartData" />
 
@@ -10,35 +9,6 @@
           <line-chart :chart-data="lineChartData" />
         </el-row>
 
-        <el-row :gutter="32">
-          <el-col :xs="24" :sm="24" :lg="8">
-            <div class="chart-wrapper">
-              <raddar-chart />
-            </div>
-          </el-col>
-          <el-col :xs="24" :sm="24" :lg="8">
-            <div class="chart-wrapper">
-              <pie-chart />
-            </div>
-          </el-col>
-          <el-col :xs="24" :sm="24" :lg="8">
-            <div class="chart-wrapper">
-              <bar-chart />
-            </div>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="8">
-          <el-col :xs="{span: 24}" :sm="{span: 24}" :md="{span: 24}" :lg="{span: 12}" :xl="{span: 12}" style="padding-right:8px;margin-bottom:30px;">
-            <transaction-table />
-          </el-col>
-          <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
-            <todo-list />
-          </el-col>
-          <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
-            <box-card />
-          </el-col>
-        </el-row>
       </div>
     </el-scrollbar>
   </div>
@@ -68,10 +38,6 @@ const lineChartData = {
   purchases: {
     expectedData: [80, 100, 121, 104, 105, 90, 100],
     actualData: [120, 90, 100, 138, 142, 130, 130]
-  },
-  shoppings: {
-    expectedData: [130, 140, 141, 142, 145, 150, 160],
-    actualData: [120, 82, 91, 154, 162, 140, 130]
   }
 }
 
@@ -95,7 +61,7 @@ export default {
   },
   methods: {
     handleSetLineChartData(type) {
-      this.lineChartData = lineChartData[type]
+      this.$router.push('/system/'+type)
     }
   }
 }
@@ -103,7 +69,7 @@ export default {
 
 <style lang="scss" scoped>
 .dashboard-editor-container {
-  padding: 32px;
+  padding: 10px;
   background-color: rgb(240, 242, 245);
   position: relative;
 

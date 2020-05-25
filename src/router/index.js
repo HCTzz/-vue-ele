@@ -80,7 +80,7 @@ export const constantRoutes = [{
             path: 'dashboard',
             component: () =>
                 import('@/views/dashboard/index'),
-            name: '首页面板',
+            name: '首页',
             icon: 'dashboard',
             affix: true
         }]
@@ -110,7 +110,7 @@ export const asyncRoutes = [{
         name: '内容管理',
         icon: 'lock',
         children: [{
-            path: 'tinymce',
+            path: 'log',
             component: () => import('@/views/system/log'),
             name: '文字'
         },
@@ -140,11 +140,18 @@ export const asyncRoutes = [{
             name: '相册'
         },
         {
-            path: 'disk',
+            path: 'video',
             component: () =>
-                import('@/views/system/disk'),
-            name: '磁盘管理'
-        }]
+                import('@/views/system/video'),
+            name: '视频'
+        },
+        // {
+        //     path: 'disk',
+        //     component: () =>
+        //         import('@/views/system/disk'),
+        //     name: '磁盘管理'
+        // }
+    ]
     },
     // 404 page must be placed at the end !!!
     { path: '*', redirect: '/404', hidden: true }

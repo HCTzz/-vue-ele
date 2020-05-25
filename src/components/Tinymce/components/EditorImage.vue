@@ -15,7 +15,7 @@
         :on-error="handleError"
         :before-upload="beforeUpload"
         class="editor-slide-upload"
-        action="/dev-api/sysFile/fileUpload"
+        :action="action"
         list-type="picture-card"
         :accept="accept"
       >
@@ -36,6 +36,7 @@
 <script>
 // import { getToken } from 'api/qiniu'
 import { deleteFile } from '@/api/file'
+import { serverPath } from '@/settings'
 
 export default {
   name: 'EditorSlideUpload',
@@ -58,9 +59,11 @@ export default {
     return {
       dialogVisible: false,
       listObj: {},
-      fileList: []
+      fileList: [],
+      action:this.$store.state.settings.serverPath + 'sysFile/fileUpload' 
     }
   },
+  //serverPath + 
   methods: {
     checkAllSuccess() {
       return Object.keys(this.listObj).every(item => this.listObj[item].hasSuccess)

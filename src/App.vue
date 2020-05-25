@@ -14,7 +14,7 @@ export default {
     font-size: 14px;
   }
   #app{
-    
+    position: relative;
   }
   .el-button+.el-button{
     margin-left: 0px;

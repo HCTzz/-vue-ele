@@ -6,7 +6,7 @@
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
-
+import {getLineCharts} from '@/api/index'
 export default {
   mixins: [resize],
   props: {
@@ -16,11 +16,11 @@ export default {
     },
     width: {
       type: String,
-      default: '100%'
+      default: 'auto'
     },
     height: {
       type: String,
-      default: '350px'
+      default: '300px'
     },
     autoResize: {
       type: Boolean,
@@ -33,7 +33,11 @@ export default {
   },
   data() {
     return {
-      chart: null
+      chart: null,
+      xAxis:[],
+      log:[],
+      photo:[],
+      video:[]
     }
   },
   watch: {
@@ -58,13 +62,25 @@ export default {
   },
   methods: {
     initChart() {
-      this.chart = echarts.init(this.$el, 'macarons')
-      this.setOptions(this.chartData)
+      getLineCharts().then(res => {
+          let data = res.data;
+          this.xAxis = data.day;
+          this.log = data.log;
+          this.photo = data.photo;
+          this.video = data.video;
+          this.chart = echarts.init(this.$el, 'macarons')
+          this.setOptions(this.chartData)
+      })
     },
     setOptions({ expectedData, actualData } = {}) {
       this.chart.setOption({
         xAxis: {
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+           axisLabel:{
+              showMaxLabel: true,
+              interval :0,
+              rotate:45
+          },
+          data: this.xAxis,
           boundaryGap: false,
           axisTick: {
             show: false
@@ -90,26 +106,25 @@ export default {
           }
         },
         legend: {
-          data: ['expected', 'actual']
+          data: ['笔记', '照片','视频']
         },
         series: [{
-          name: 'expected', itemStyle: {
+          name: '笔记', itemStyle: {
             normal: {
               color: '#FF005A',
               lineStyle: {
                 color: '#FF005A',
-                width: 2
               }
             }
           },
           smooth: true,
           type: 'line',
-          data: expectedData,
+          data: this.log,
           animationDuration: 2800,
           animationEasing: 'cubicInOut'
         },
         {
-          name: 'actual',
+          name: '照片',
           smooth: true,
           type: 'line',
           itemStyle: {
@@ -117,17 +132,36 @@ export default {
               color: '#3888fa',
               lineStyle: {
                 color: '#3888fa',
-                width: 2
               },
               areaStyle: {
                 color: '#f3f8ff'
               }
             }
           },
-          data: actualData,
+          data: this.photo,
           animationDuration: 2800,
           animationEasing: 'quadraticOut'
-        }]
+        },
+        {
+          name: '视频',
+          smooth: true,
+          type: 'line',
+          itemStyle: {
+            normal: {
+              color: '#3888fa',
+              lineStyle: {
+                color: '#3888fa',
+              },
+              areaStyle: {
+                color: '#f3f8ff'
+              }
+            }
+          },
+          data: this.video,
+          animationDuration: 2800,
+          animationEasing: 'quadraticOut'
+        }
+        ]
       })
     }
   }

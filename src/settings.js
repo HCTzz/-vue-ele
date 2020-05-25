@@ -1,5 +1,5 @@
 module.exports = {
-  title: '文件管理应用',
+  title: 'Hmc',
 
   /**
    * @type {boolean} true | false
@@ -33,5 +33,5 @@ module.exports = {
    */
   errorLog: 'production',
   
-  serverPath: 'http://localhost:8012/'
+  serverPath: 'http://47.93.91.162:8012/pro/'
 }

@@ -3,30 +3,32 @@
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
 
       <div class="title-container">
-        <h3 class="title">Login Form</h3>
+        <h3 class="title" >Login</h3>
       </div>
 
-      <el-form-item prop="username">
+      <el-form-item prop="username" style="background-color: #fff; border: 1px solid #d9d9d9;">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
         <el-input
+          size="small"
           ref="username"
           v-model="loginForm.username"
           placeholder="Username"
           name="username"
           type="text"
           tabindex="1"
-          autocomplete="on"
+          autocomplete="off"
         />
       </el-form-item>
 
       <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
-        <el-form-item prop="password">
+        <el-form-item prop="password" style="background-color: #fff; border: 1px solid #d9d9d9;">
           <span class="svg-container">
             <svg-icon icon-class="password" />
           </span>
           <el-input
+            size="small"
             :key="passwordType"
             ref="password"
             v-model="loginForm.password"
@@ -34,7 +36,7 @@
             placeholder="Password"
             name="password"
             tabindex="2"
-            autocomplete="on"
+            autocomplete="off"
             @keyup.native="checkCapslock"
             @blur="capsTooltip = false"
             @keyup.enter.native="handleLogin"
@@ -44,61 +46,38 @@
           </span>
         </el-form-item>
       </el-tooltip>
-
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
-
-      <!-- <div style="position:relative">
-        <div class="tips">
-          <span>Username : admin</span>
-          <span>Password : any</span>
-        </div>
-        <div class="tips">
-          <span style="margin-right:18px;">Username : editor</span>
-          <span>Password : any</span>
-        </div>
-
-        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
-          Or connect with
-        </el-button>
-      </div> -->
     </el-form>
-
-    <!-- <el-dialog title="Or connect with" :visible.sync="showDialog">
-      Can not be simulated on local, so please combine you own business simulation! ! !
-      <br>
-      <br>
-      <br>
-      <social-sign />
-    </el-dialog> -->
   </div>
 </template>
 
 <script>
+import Cookies from 'js-cookie'
 import { validUsername } from '@/utils/validate'
 import SocialSign from './components/SocialSignin'
-import { encrypt } from '@/utils/cypto';
+import { encrypt ,decrypt} from '@/utils/cypto';
 export default {
   name: 'Login',
   components: { SocialSign },
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
+        callback(new Error('请输入用户名'))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
+        callback(new Error('密码不低于六位'))
       } else {
         callback()
       }
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        username: '',
+        password: ''
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -128,11 +107,20 @@ export default {
     // window.addEventListener('storage', this.afterQRScan)
   },
   mounted() {
-    if (this.loginForm.username === '') {
-      this.$refs.username.focus()
-    } else if (this.loginForm.password === '') {
-      this.$refs.password.focus()
+    let userName = Cookies.get('userName');
+    if(userName){
+      this.loginForm.username = userName;
     }
+    let userPwd = Cookies.get('userPwd');
+    if(userPwd){
+      userPwd = decrypt(userPwd);
+      this.loginForm.password = userPwd;
+    }
+    // if (this.loginForm.username === '') {
+    //   this.$refs.username.focus()
+    // } else if (this.loginForm.password === '') {
+    //   this.$refs.password.focus()
+    // }
   },
   destroyed() {
     // window.removeEventListener('storage', this.afterQRScan)
@@ -164,8 +152,11 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true;
+          let that = this;
           this.$store.dispatch('user/login', { username: encrypt(this.loginForm.username), password: encrypt(this.loginForm.password) })
             .then(() => {
+              Cookies.set('userName', that.loginForm.username);
+              Cookies.set('userPwd', encrypt(that.loginForm.password));
               this.$message({
                 showClose: true,
                 message: '登陆成功',
@@ -218,7 +209,6 @@ $cursor: #fff;
 .login-container {
   .el-input {
     display: inline-block;
-    height: 47px;
     width: 85%;
 
     input {
@@ -226,10 +216,9 @@ $cursor: #fff;
       border: 0px;
       -webkit-appearance: none;
       border-radius: 0px;
-      padding: 12px 5px 12px 15px;
-      color: $light_gray;
-      height: 47px;
-      caret-color: $cursor;
+      padding: 5px 5px 5px 5px;
+      color: #aaa;
+      caret-color: #40a9ff;
 
       &:-webkit-autofill {
         box-shadow: 0 0 0px 1000px $bg inset !important;
@@ -253,18 +242,40 @@ $dark_gray:#889aa4;
 $light_gray:#eee;
 
 .login-container {
-  min-height: 100%;
-  width: 100%;
-  background-color: $bg;
+  background-color: #fff;
   overflow: hidden;
-
+  background: #fff;
+  position: absolute;
+  border-radius: 5px;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%,-45%);
+  width: 320px;
+  padding: 18px 28px 28px 28px;
+  -webkit-box-shadow: -4px 7px 46px 2px rgba(0,0,0,.1);
+  box-shadow: -4px 7px 46px 2px rgba(0,0,0,.1);
+  
   .login-form {
     position: relative;
     width: 520px;
     max-width: 100%;
-    padding: 160px 35px 0;
+    padding-top: 10px;
     margin: 0 auto;
     overflow: hidden;
+    .title-container{
+      text-align: center;
+      .title{
+        vertical-align: text-bottom;
+        font-size: 28px;
+        display: inline-block;
+        font-weight: 600;
+        color: #1790fe;
+        background-image: linear-gradient(-20deg,#6e45e2,#88d3ce);
+        -webkit-text-fill-color: transparent;
+        -webkit-background-clip: text;
+        background-clip: text;
+      }
+    }
   }
 
   .tips {
@@ -280,7 +291,7 @@ $light_gray:#eee;
   }
 
   .svg-container {
-    padding: 6px 5px 6px 15px;
+    padding: 0px 5px 0px 15px;
     color: $dark_gray;
     vertical-align: middle;
     width: 30px;
@@ -293,7 +304,7 @@ $light_gray:#eee;
     .title {
       font-size: 26px;
       color: $light_gray;
-      margin: 0px auto 40px auto;
+      margin: 0px auto 20px auto;
       text-align: center;
       font-weight: bold;
     }
@@ -302,7 +313,7 @@ $light_gray:#eee;
   .show-pwd {
     position: absolute;
     right: 10px;
-    top: 7px;
+    top: 3px;
     font-size: 16px;
     color: $dark_gray;
     cursor: pointer;

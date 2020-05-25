@@ -147,7 +147,7 @@ export default {
         // images_upload_base_path:'/file/fileUpload',
         images_reuse_filename: true,
         paste_data_images: true,
-        images_upload_url: '/sysFile/fileUpload',
+        images_upload_url: _this.$store.state.settings.serverPath +  '/sysFile/fileUpload',
         nonbreaking_force_tab: true, // inserting nonbreaking space &nbsp; need Nonbreaking Space Plugin
         init_instance_callback: editor => {
           if (_this.value) {

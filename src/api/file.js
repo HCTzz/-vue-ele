@@ -36,7 +36,7 @@ export function deleteFile(fileKey) {
 }
 
 export function downloadFile(fileKey) {
-  window.location.href = serverPath + '/sysFile/downloadFile?fileKey='+fileKey;
+  window.location.href = serverPath + 'sysFile/downloadFile?fileKey='+fileKey;
   // return request({
   //   url: '/sysFile/downloadFile',
   //   method: 'post',

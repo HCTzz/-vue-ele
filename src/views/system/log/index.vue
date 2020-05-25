@@ -4,14 +4,16 @@
       <!-- v-model="searchFileName" -->
       <!-- @keyup.enter.native="searchFile" -->
       <el-input
-        v-model="searchName"
+        v-model="listQuery.searchName"
         class="input"
         size="mini"
         type="text"
         placeholder="请输入标题/内容"
         clearable
         @keyup.enter.native="searchVlog"
-      />
+      >
+        <el-button slot="append" @click="searchVlog" icon="el-icon-search"></el-button>
+      </el-input>
       <el-button
         type="primary"
         icon="el-icon-plus"
@@ -21,7 +23,7 @@
     </div>
     <div class="table">
       <el-table
-        size="small"
+        size="mini"
         header-cell-class-name="el-table-head-th"
         :data="tableData"
         stripe
@@ -31,15 +33,15 @@
         empty-text="无数据"
         class="ele-table"
       >
-        <el-table-column type="index" label="序号" width="50" align="center" />
-        <el-table-column prop="title" label="标题" min-width="55%" show-overflow-tooltip align="center" />
-        <el-table-column prop="deleteStatus" label="状态" min-width="15%" align="center" :formatter="formatStatus" />
-        <el-table-column label="时间" prop="createTime" min-width="20%" align="center">
+        <el-table-column type="index" label="序号"  width="50"  align="center" />
+        <el-table-column prop="title" label="标题" min-width="50%" show-overflow-tooltip align="center" />
+        <el-table-column prop="deleteStatus" label="状态" min-width="15%"  align="center" :formatter="formatStatus" />
+        <el-table-column label="时间" prop="createTime" min-width="25%" align="center">
           <template slot-scope="scope">
             {{ scope.row.createTime | timeParse }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="20%" align="center">
+        <el-table-column label="操作"  min-width="20%" align="center">
           <template slot-scope="scope">
             <el-button
               v-if="scope.row.deleteStatus == 1"
@@ -97,8 +99,7 @@
       :visible.sync="visible"
       :close-on-click-modal="false"
       :close-on-press-escape="false"
-      width="960px"
-      top="5vh"
+      :fullscreen=true
       @closed="closeEvent"
     >
       <el-form
@@ -150,7 +151,6 @@ export default {
         createTime: ''
       },
       dialogTitle: '',
-      searchName: '',
       page: {},
       tableData: [
       //   {
@@ -167,7 +167,8 @@ export default {
       total: 0,
       listQuery: {
         page: 1,
-        limit: 10
+        limit: 10,
+        searchName: '',
       },
       actionType: '',
       visible: false,
@@ -222,7 +223,7 @@ export default {
       this.vlog.content = content;
     },
     searchVlog() {
-
+      initList();
     },
     handleClick(params) {
 
@@ -283,17 +284,27 @@ export default {
 };
 </script>
 
-<style  scoped>
+<style lang="scss" scoped>
 .main {
   padding: 20px 10px 0px 10px;
 }
-.el-input{
-  width: 220px
-}
-.btns .el-button{
-  margin-left: 20px;
-}
+
 .table{
   height: calc(100% - 100px);
 }
+
+</style>
+<style lang="scss" >
+.btns{
+  .el-input__inner{
+      width: 220px ;
+      @media (max-width:550px) {
+          width: 160px ;
+      }
+  }
+  .el-input-group{
+    width: auto;
+  }
+}
+
 </style>

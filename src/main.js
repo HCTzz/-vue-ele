@@ -1,15 +1,10 @@
 import Vue from 'vue'
-
 import Cookies from 'js-cookie'
-
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
-
 import VueLazyload from 'vue-lazyload'
-
-
 import Element from 'element-ui'
 import './styles/element-variables.scss'
-
+import 'element-ui/lib/theme-chalk/index.css';
 import '@/styles/index.scss' // global css
 import '@/assets/iconfont/iconfont.css'
 import App from './App'
@@ -22,6 +17,8 @@ import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
 import Contextmenu from 'vue-contextmenujs'
+import './utils/event.js';
+
 Vue.use(Contextmenu);
 /**
  * If you don't want to use mock-server

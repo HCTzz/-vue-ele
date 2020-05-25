@@ -1,91 +1,147 @@
 <template>
   <div class="main">
     <div class="header">
-      <div>
-        <el-image class="img" :key="getImgSrc(photo.fileId)" fit="cover" :src="getImgSrc(photo.fileId)" lazy />
-      </div>
-      <div class="info">
-        <span>{{photo.name}} (<strong>{{photo.imgCount}}</strong>) </span>
-        <span>
-          <editorImage pickeName="上传图片" color="#1890ff" :accept="accept" class="editor-upload-btn" @successCBK="imageSuccessCBK" />
-        </span>
+      <div class="search">
+        <el-input 
+          v-model="listQuery.searchFileName"
+          class="input"
+          size="mini"
+          type="text"
+          placeholder="搜索视频"
+          clearable
+          @keyup.enter.native="searchFile"
+          style="width:auto"
+        >
+          <el-button slot="append" @click="searchFile" icon="el-icon-search"></el-button>
+        </el-input>
+        <editorImage style="display: inline-block;" pickeName="上传视频" color="#1890ff" :accept="accept" class="editor-upload-btn" @successCBK="imageSuccessCBK" />
       </div>
     </div>
     <div class="content">
       <el-scrollbar style='height:100%'>
         <el-row class="row">
-          <el-col class="col" v-for="(file,index) in fileList" :key="file.fileId" :xs="12" :sm="6" :md="4" :xl="1">
-              <div class="gutter">
-                <el-image @contextmenu.prevent.stop="contextmenu(file.id,index,$event)" v-longtap.stop="{fn:openContext, fileId:file.id, index:index}"  :preview-src-list="priviewSrcList" :key="getImgSrc(file.fileId)" fit="cover" :src="getImgSrc(file.fileId)" />
+          <el-col class="col" v-for="(video,index) in fileList" :key="video.fileKey" :xs="12" :sm="6" :md="4" :xl="1">
+              <div class="gutter" @contextmenu.prevent.stop.capture="contextmenu(video.fileKey,index,$event)" v-longtap.stop="{fn:openContext, fileId:video.fileKey, index:index}">
+                <div class="img-div" @click="priviewVideo(video)">
+                  <el-image class='el-image'  fit="cover" :src="getImgSrc(video.fileKey)" >
+                    <div slot="error" class="image-slot">
+                      <img :src="getImgSrc('')" style="background-size: cover;max-width:100%" alt="">
+                    </div>
+                  </el-image>
+                  <span >{{video.createTime | dateParse}}</span>
+                  <span >{{video.fileSize | renderSize}}</span>
+                  <i class="el-icon-video-play"></i>
+                </div>
                 <div class="descr">
-                  <span contenteditable="true" @blur="changeFileName(file,index,$event)">{{ file.name }}</span>
-                  <span >{{file.updateTime | excludSec}}</span>
-                </div> 
+                  <span contenteditable="true" @blur="changeFileName(video,index,$event)">{{ video.fileName }}</span>
+                  <span >{{video.fileDuration | resloveVideoDuration}}</span>
+                </div>
               </div>
           </el-col>
         </el-row>
       </el-scrollbar>
     </div>
+    <div class="pagination">
+        <pagination
+          v-show="total > 0"
+          :total="total"
+          :page.sync="listQuery.page"
+          :limit.sync="listQuery.limit"
+          @pagination="changePage"
+        />
+      </div>
+      <div class="videoDialog" v-show="playEleShow" >
+        <video ref="videoElement" class="centeredVideo" :style="{height:height}" controls>
+            Your browser is too old which doesn't support HTML5 video.
+        </video>
+        <i class="el-icon-circle-close" @click="destoryFlv"></i>
+      </div>
   </div>
 </template>
 
 <script>
-import { log } from 'util';
+import Pagination from '@/components/Pagination';
 import focusOnCondition from '@/directive/focus';
-import { getFileList, batchAddPhoto, deletePhoto, updatePhoto} from '@/api/photo';
-import { downloadFile} from '@/api/file';
+import {getVideoList,downloadVideo ,updateVideo} from '@/api/video';
+import { deleteFile,downloadFile} from '@/api/file';
 import { MessageBox } from 'element-ui';
 import editorImage from '@/components/Tinymce/components/EditorImage'
 document.oncontextmenu = function() { return false; }
+import flvjs from 'flv.js/dist/flv.js'
 export default {
   directives: { focusOnCondition },
-  components: { editorImage },
+  components: { editorImage ,Pagination },
   data() {
     return {
         visible: false,
-        searchFileName: '',
         fileList: [],
-        priviewSrcList:[],
-        file: null,
-        tempFilelist: [],
-        pid:'',
-        photo:{},
+        total: 0,
+        pages:0,
+        playEleShow:false,
+        width:0,
+        height:0,
+        listQuery: {
+          page: 1,
+          limit: 10,
+          searchFileName: '',
+        },
+        player:null,
         fileId:'',
+        tempFilelist:[],
         defaultImgPath: require('@/assets/img/default.jpg'),
-        accept: '.jpg,.jpeg,.png,.gif,.bmp,.JPG,.JPEG,.PBG,.GIF,.BMP'
+        accept: '.MP4,.mp4,.flv,.FLV'
     };
   },
   watch: {
-    fileList: function(newFileList, oldFileList) {
-      if(this.photo &&  !this.photo.fileId){
-        if(this.photo.hasOwnProperty('fileId')){
-          this.photo.fileId = newFileList[0].fileId;
-        }
-        
-      }
-      this.photo.imgCount = newFileList.length;
-      var that = this;
-      newFileList.forEach(function(item, index) {
-          that.priviewSrcList.push(that.getImgSrc(item.fileId));
-      })
-    }
+    
   },
   mounted: function() {
-    this.pid = this.$route.params.pid;
-    this.freshFileList({ pid: this.pid,hasOwer:'y' });
+    this.freshFileList(this.listQuery);
   },
   methods: {
-    imageSuccessCBK(arr) {
-      arr.forEach(v => {
-        if(v.hasSuccess){
-          this.tempFilelist.push({fileId:v.uid,pid:this.pid,name:v.fileName});
-        }
+    priviewVideo(video){
+      if(this.player){
+        this.destoryFlv();
+      }
+      this.height = video.fileHeight + 'px';
+      this.width = video.fileWidth + 'px';
+      this.playEleShow = true;
+      this.player = flvjs.createPlayer({
+        type:video.fileExt,
+        isLive:false,
+        duration:video.fileDuration,
+        filesize:video.fileSize,
+        url:this.$store.state.settings.serverPath + 'video/priviewVideo?fileKey=' + video.fileKey
       });
-      batchAddPhoto(this.tempFilelist).then(res => {
-        this.$message.success('保存成功');
-        this.fileList = this.fileList.concat(res.data);
-        this.tempFilelist = [];
+      this.player.attachMediaElement(this.$refs.videoElement);
+      this.player.load();
+      this.player.play();
+
+      this.player.on(flvjs.Events.ERROR, (errorType, errorDetail, errorInfo) => {
+          console.log('errorType:', errorType);
+          console.log('errorDetail:', errorDetail);
+          console.log('errorInfo:', errorInfo);
+        },
+      );
+      let that = this;
+      this.$refs.videoElement.addEventListener('error',function(e){
+        that.$message({
+          type:'error',
+          message:'视频加载失败'
+       });
       })
+    } ,   
+    destoryFlv(){
+      this.playEleShow = false;
+      this.player.destroy();
+      this.player = null;
+    },
+    changePage(data){
+      this.listQuery = data; 
+      this.freshFileList(data);
+    },
+    imageSuccessCBK(arr) {
+      freshFileList();
     },
     getImgSrc(key) {
       if (!key) {
@@ -102,20 +158,21 @@ export default {
           target: '.main'
       });
       this.fileList = [];
-      getFileList(data).then((res) => {
-        const list = res.data.list;
+      getVideoList(data).then((res) => {
+        const list = res.data.data;
         this.fileList = list;
-        this.photo = res.data.photo;
+        this.total = res.data.count;
+        this.pages = res.data.pages;
       })
       loading.close();
     },
     changeFileName(file,index, event) {
       const changeName = event.target.innerText;
-      if(file.name == changeName){
+      if(file.fileName == changeName){
         return ;
       }
-      file.name = changeName;
-      updatePhoto(file).then(res => {
+      file.fileName = changeName;
+      updateVideo(file).then(res => {
         this.$message.success('修改成功');
         if (this.fileList[index].fileName !== changeName) {
           this.fileList[index].fileName = changeName;
@@ -129,14 +186,14 @@ export default {
           type: 'warning',
           center: true
         }).then(() => {
-           deletePhoto({id:id}).then(res => {
+           deleteFile(id).then(res => {
             this.fileList.splice(index, 1);
             this.$message.success('删除成功！');
           })
         })
     },
     downLoad(id,index){
-        downloadFile( this.fileList[index].fileId);
+        downloadFile( id);
     },
     openContext(ev,value){
       this.contextmenu(value.fileId,value.index, ev);
@@ -154,9 +211,10 @@ export default {
           { label: '删除', divided: true, icon: 'el-icon-delete', onClick: () => {
             this.deleteFiles(id,index);
           } },
-          { label: '重命名', divided: true, onClick: () => {
-            event.target.parentNode.nextElementSibling.children[0].focus();
-          } },
+          // { label: '重命名', divided: true, onClick: () => {
+          //   console.log(event);
+          //   // event.target.parentNode.nextElementSibling.children[0].focus();
+          // } },
         ],
         event,
         zIndex: 3,
@@ -164,17 +222,16 @@ export default {
       });
       return false;
     },
-
     searchFile() {
-      if (this.searchFileName == '' && this.tempFilelist.length > 0) {
-        this.freshFileList({ pid: this.rootId,searchName:this.searchFileName });
+      if (this.listQuery.searchFileName == '' && this.tempFilelist.length > 0) {
+        this.freshFileList({ searchName:this.listQuery.searchFileName });
       }
     },
     back(e) {
       if (!this.leftArrowEnable) {
         return false;
       }
-      this.searchFileName = '';
+      this.listQuery.searchFileName = '';
       if (this.tempFilelist.length > 0) {
         this.fileList = this.tempFilelist;
         this.tempFilelist = [];
@@ -217,14 +274,22 @@ export default {
 };
 </script>
 <style lang="scss">
+.pagination-container{
+  padding-top: 5px !important;
+  margin: 0px;
+  text-align: center !important;
+}
+
 .search .el-input__inner{
-    padding-left: 0px ;
+    padding-left: 10px ;
     padding-right: 10px ;
-    border: none ;
     width: 220px ;
+    @media (max-width:550px) {
+        width: 160px ;
+    }
 }
 .search i{
-  font-size: 16px;
+  font-size: 14px;
 }
 .el{
   color:#F8C92A
@@ -290,11 +355,35 @@ a.path-a:hover{
 .el-scrollbar__wrap{
   overflow-x:hidden;
 }
+
+.videoDialog{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    background-color: rgba(0, 0, 0, 0.18);
+    text-align: center;
+    .centeredVideo{
+      max-width: 100%;
+      max-height: 90%;
+      margin-top: 1%;
+    }
+    .el-icon-circle-close{
+      position: absolute;
+      right: 2rem;
+      top:1rem;
+      font-size: 3rem;
+      color: #fff;
+      cursor: pointer;
+    }
+}
 </style>
 <style lang="scss" scoped>
 .main {
   height: 100%;
   color: #666;
+  position: relative;
   .footer{
     letter-spacing: 1px;
     height: 30px;
@@ -314,10 +403,12 @@ a.path-a:hover{
   }
   .header{
     font-size: 16px;
-    height: 90px;
+    height: 60px;
+    line-height: 60px;
     width: 100%;
     border-bottom: 1px solid #ccc;
     > div{
+      margin-left: 10px;
       display: inline-block;
       vertical-align: middle;
       height: 100%;
@@ -380,7 +471,7 @@ a.path-a:hover{
     };
   };
   .content{
-    height: calc(100vh - 175px);
+    height: calc(100vh - 185px);
     overflow: hidden;
     background: #e8f4ff;
     .row{
@@ -397,6 +488,42 @@ a.path-a:hover{
         .gutter{
           padding: 10px;
           background-color: #fff;
+          .img-div{
+            position: relative;
+            .el-image{
+              cursor: pointer;
+              &::before{
+                content: '';
+                position: absolute;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(48, 49, 51, 0.16);
+              }
+              &:hover::before{
+                  background-color: rgba(48, 49, 51, 0.26);
+              }
+            }
+            i{
+              cursor: pointer;
+              position: absolute;
+              top:50%;
+              left: 50%;
+              transform: translate(-50%,-50%);
+              color: rgba(255, 255, 255, 0.7098039215686275);
+              font-size: 3rem;
+            }
+            span{
+              position: absolute;
+              left: 4px;
+              bottom: 15px;
+              color: #ffffffab;
+              &:nth-child(3){
+                left:auto;
+                right:  4px;
+              }
+            }
+          }
           i{
             margin: 0 auto;
             font-size: 80px;
@@ -415,8 +542,8 @@ a.path-a:hover{
             };
             span:nth-child(1){
               border-top: 1px solid #eee;
-              height: 40px;
-              line-height: 40px;
+              height: 30px;
+              line-height: 30px;
               color:#333;
             };
             span:nth-child(2){
