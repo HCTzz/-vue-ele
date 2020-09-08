@@ -5,7 +5,7 @@ module.exports = {
    * @type {boolean} true | false
    * @description Whether show the settings right-panel
    */
-  showSettings: true,
+  showSettings: false,
 
   /**
    * @type {boolean} true | false
@@ -33,5 +33,6 @@ module.exports = {
    */
   errorLog: 'production',
   
-  serverPath: 'http://47.93.91.162:8012/pro/'
+  // serverPath: 'http://47.93.91.162/pro/'
+  serverPath: '/user/pro/'
 }

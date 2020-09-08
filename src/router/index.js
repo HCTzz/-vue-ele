@@ -85,24 +85,13 @@ export const constantRoutes = [{
             affix: true
         }]
     }
-    // {
-    //     path: '/documentation',
-    //     component: Layout,
-    //     children: [{
-    //         path: 'index',
-    //         component: () =>
-    //             import('@/views/documentation/index'),
-    //         name: '开发文档',
-    //         icon: 'documentation'
-    //     }]
-    // }
 ];
 
 /**
  * asyncRoutes
  * the routes that need to be dynamically loaded based on user roles
  */
-export const asyncRoutes = [{
+const asyncRoutes = [{
         path: '/system',
         component: Layout,
         redirect: '/system/page',
@@ -165,7 +154,7 @@ const createRouter = () =>
     });
 
 const router = createRouter();
-
+router.addRoutes(asyncRoutes);
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
 export function resetRouter() {
     const newRouter = createRouter();

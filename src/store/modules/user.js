@@ -1,7 +1,7 @@
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
-import { encrypt } from '@/utils/cypto'
+import Cookies from 'js-cookie'
 const state = {
     token: getToken(),
     name: '',
@@ -35,15 +35,9 @@ const mutations = {
 const actions = {
     // user login
     login({ commit }, userInfo) {
-        const { username, password } = userInfo
+        const { username, password ,remember } = userInfo
         return new Promise((resolve, reject) => {
-            // login({ username: encrypt(username.trim()), password: encrypt(password) }).then(response => {
-            login({ username: username.trim(), password: password }).then(response => {
-                const { data } = response
-                commit('SET_TOKEN', data)
-                setToken(data)
-                // commit('SET_TOKEN', data.token)
-                // setToken(data.token)
+            login({ username: username.trim(), password: password,remember:remember }).then(response => {
                 resolve()
             }).catch(error => {
                 reject(error)

@@ -217,3 +217,9 @@ aside {
     line-height: 18px;
     font-size: 16px;
 }
+
+input:-webkit-autofill { 
+	box-shadow: 0 0 0px 1000px #fff inset !important; 
+	text-fill-color: white;
+	-webkit-text-fill-color: white; 
+}

@@ -95,7 +95,7 @@ export default {
       if (!key) {
         return this.defaultImgPath;
       }
-      return this.$store.state.settings.serverPath + '/sysFile/priviewImg?fileKey=' + key;
+      return this.$store.state.settings.serverPath + 'sysFile/priviewImg?fileKey=' + key;
     },
     freshFileList(data) {
       const loading = this.$loading({
@@ -263,9 +263,9 @@ export default {
 .search .el-input__inner{
     padding: 5px 10px;
     width: 220px ;
-    border:1px solid #C0C4CC;
+    border:1px solid #C0C4CC !important;
     @media (max-width:550px) {
-        width: 160px ;
+        width: 160px !important;
     }
 }
 

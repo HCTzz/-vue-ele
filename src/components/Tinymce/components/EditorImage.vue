@@ -18,6 +18,7 @@
         :action="action"
         list-type="picture-card"
         :accept="accept"
+        :headers="header"
       >
         <el-button size="small" type="primary">
           Click upload
@@ -60,7 +61,10 @@ export default {
       dialogVisible: false,
       listObj: {},
       fileList: [],
-      action:this.$store.state.settings.serverPath + 'sysFile/fileUpload' 
+      action:this.$store.state.settings.serverPath + 'sysFile/fileUpload' ,
+      header:{
+        token:this.$store.state.user.token
+      }
     }
   },
   //serverPath + 

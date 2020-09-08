@@ -112,6 +112,8 @@ export default {
         duration:video.fileDuration,
         filesize:video.fileSize,
         url:this.$store.state.settings.serverPath + 'video/priviewVideo?fileKey=' + video.fileKey
+      },{
+        stashInitialSize:'1024KB'
       });
       this.player.attachMediaElement(this.$refs.videoElement);
       this.player.load();

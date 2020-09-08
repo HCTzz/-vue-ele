@@ -46,6 +46,10 @@
           </span>
         </el-form-item>
       </el-tooltip>
+      <el-form-item style=" background-color: #fff;border: none !important;margin-bottom:10px">
+        <el-checkbox v-model="loginForm.remember">记住我</el-checkbox>
+      </el-form-item>
+
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
     </el-form>
   </div>
@@ -77,7 +81,8 @@ export default {
     return {
       loginForm: {
         username: '',
-        password: ''
+        password: '',
+        remember:false
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -153,7 +158,8 @@ export default {
         if (valid) {
           this.loading = true;
           let that = this;
-          this.$store.dispatch('user/login', { username: encrypt(this.loginForm.username), password: encrypt(this.loginForm.password) })
+          this.loginForm.remember = this.loginForm.remember === true ? 'on' : 'off';
+          this.$store.dispatch('user/login', {remember:this.loginForm.remember, username: this.loginForm.username, password: encrypt(this.loginForm.password) })
             .then(() => {
               Cookies.set('userName', that.loginForm.username);
               Cookies.set('userPwd', encrypt(that.loginForm.password));
@@ -167,8 +173,6 @@ export default {
                    this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
                 }
               });
-              // this.$message.success('登陆成功');
-             
             })
             .catch(() => {
               this.loading = false

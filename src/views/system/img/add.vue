@@ -57,13 +57,8 @@ export default {
   },
   watch: {
     fileList: function(newFileList, oldFileList) {
-      if(this.photo &&  !this.photo.fileId){
-        if(this.photo.hasOwnProperty('fileId')){
-          this.photo.fileId = newFileList[0].fileId;
-        }
-        
-      }
       this.photo.imgCount = newFileList.length;
+      this.photo['fileId'] = newFileList[0].fileId;
       var that = this;
       newFileList.forEach(function(item, index) {
           that.priviewSrcList.push(that.getImgSrc(item.fileId));
