@@ -3,15 +3,16 @@ import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
 import { getToken,setToken,removeToken } from '@/utils/auth'
 import qs from 'qs'
+import Router from '@/router' 
 import { serverPath } from '@/settings'
 // create an axios instance
 const service = axios.create({
-    baseURL:  serverPath,//process.env.VUE_APP_BASE_API,//serverPath , // url = base url + request url
+    baseURL:  process.env.VUE_APP_BASE_API,//serverPath , // url = base url + request url
     withCredentials: true, // send cookies when cross-domain requests
     timeout: 5000, // request timeout
     headers: { 
         'Content-Type': 'application/x-www-form-urlencoded' ,
-        'token':getToken()
+        // 'token':getToken()
     },
     transformRequest: [function(data, headers) {
         if (headers['Content-Type'] === 'application/x-www-form-urlencoded') {
@@ -44,7 +45,8 @@ service.interceptors.response.use(
                 duration: 5 * 1000
             })
             if(res.code === 20011){
-                setToken('login');
+                removeToken();
+                Router.push('/login');
             }
             return Promise.reject(new Error(res.message || 'Error'))
         }

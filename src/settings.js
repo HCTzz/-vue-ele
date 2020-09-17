@@ -34,5 +34,5 @@ module.exports = {
   errorLog: 'production',
   
   // serverPath: 'http://47.93.91.162/pro/'
-  serverPath: '/user/pro/'
+  serverPath: '/pro'
 }

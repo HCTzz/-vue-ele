@@ -60,6 +60,7 @@ import Cookies from 'js-cookie'
 import { validUsername } from '@/utils/validate'
 import SocialSign from './components/SocialSignin'
 import { encrypt ,decrypt} from '@/utils/cypto';
+import {  setToken } from '@/utils/auth'
 export default {
   name: 'Login',
   components: { SocialSign },
@@ -169,8 +170,9 @@ export default {
                 type: 'success',
                 duration:2000,
                 onClose:() => {
-                   this.loading = false 
-                   this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+                  setToken('login');
+                  this.loading = false 
+                  this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
                 }
               });
             })

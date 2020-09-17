@@ -91,7 +91,7 @@ export const constantRoutes = [{
  * asyncRoutes
  * the routes that need to be dynamically loaded based on user roles
  */
-const asyncRoutes = [{
+export const asyncRoutes = [{
         path: '/system',
         component: Layout,
         redirect: '/system/page',
@@ -103,18 +103,6 @@ const asyncRoutes = [{
             component: () => import('@/views/system/log'),
             name: '文字'
         },
-        // {
-        //     path: 'page',
-        //     component: () =>
-        //         import('@/views/system/page'),
-        //     name: '权限管理'
-        // },
-        // {
-        //     path: 'file',
-        //     component: () =>
-        //         import('@/views/system/file'),
-        //     name: '文件管理'
-        // },
         {
             path: 'img',
             component: () =>
@@ -134,13 +122,12 @@ const asyncRoutes = [{
                 import('@/views/system/video'),
             name: '视频'
         },
-        // {
-        //     path: 'disk',
-        //     component: () =>
-        //         import('@/views/system/disk'),
-        //     name: '磁盘管理'
-        // }
-    ]
+        {
+            path: 'face',
+            component: () =>
+                import('@/views/system/opencv'),
+            name: '检测DEMO'
+        }]
     },
     // 404 page must be placed at the end !!!
     { path: '*', redirect: '/404', hidden: true }

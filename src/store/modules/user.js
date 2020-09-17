@@ -38,6 +38,14 @@ const actions = {
         const { username, password ,remember } = userInfo
         return new Promise((resolve, reject) => {
             login({ username: username.trim(), password: password,remember:remember }).then(response => {
+                if(response.code === 20000){
+                    const { roles, username, avatar,enabled } = response.data
+                    var role = [];
+                    role.push(roles);
+                    commit('SET_ROLES', role)
+                    commit('SET_NAME', username)
+                    commit('SET_AVATAR', avatar)
+                }
                 resolve()
             }).catch(error => {
                 reject(error)
@@ -76,6 +84,8 @@ const actions = {
             logout(state.token).then(() => {
                 commit('SET_TOKEN', '')
                 commit('SET_ROLES', [])
+                commit('SET_NAME', '')
+                commit('SET_AVATAR', '')
                 removeToken()
                 resetRouter()
                 resolve()
